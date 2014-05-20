@@ -8,7 +8,7 @@ TO_EMAILS = ({ email: email } for email in system.env.TO_EMAILS.split(" "))
 
 MANDRILL_HOST = "https://mandrillapp.com"
 
-sendEmail = (body="") ->
+sendEmail = (subject="", body="") ->
   body = body.replace(/[\u0080-\uffff]/g, "")
 
   console.log "Sending #{body} to", TO_EMAILS
@@ -18,9 +18,8 @@ sendEmail = (body="") ->
     key: MANDRILL_KEY
     message:
       text: body
-      subject: "[Fry's alert]"
+      subject: subject
       from_email: FROM_EMAIL
-      from_name: "Alert"
       to: TO_EMAILS
     async: false
 
@@ -43,9 +42,14 @@ checkFrys = (product, zip, distance) ->
 
   console.log "Checking Frys: ", product, zip, distance
 
+  productUrl = "http://www.frys.com/product/#{product}"
+  productTitle = ""
+
   casper.start()
-  casper.thenOpen("http://www.frys.com/product/#{product}")
+  casper.thenOpen(productUrl)
   .then ->
+    productTitle = @evaluate ->
+      document.querySelector(".product_title b").innerText
     @click "#product_storepickup_info a"
   .then ->
     @fill 'form[action^="/wf"]',
@@ -62,9 +66,11 @@ checkFrys = (product, zip, distance) ->
           store: row.querySelector("td:first-child b").innerText
           availability: row.querySelector("td:last-child").innerText isnt "Items unavailable"
     available = (store.store for store in stores when store.availability)
+    console.log "product:", productTitle
+    console.log "url:", productUrl
     console.log "available:", available
     if available.length > 0
-      sendEmail "http://www.frys.com/product/#{product}\n\nAvailable:\n\n" + available.join("\n")
+      sendEmail "[Frys] #{productTitle}", "http://www.frys.com/product/#{product}\n\nAvailable:\n\n" + available.join("\n")
   .wait 10000, ->
     console.log "waited 10sec"
   .run()
