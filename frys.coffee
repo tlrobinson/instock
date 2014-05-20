@@ -64,7 +64,7 @@ checkFrys = (product, zip, distance) ->
     available = (store.store for store in stores when store.availability)
     console.log "available:", available
     if available.length > 0
-      sendEmail available.join(", ")
+      sendEmail "http://www.frys.com/product/#{product}\n\nAvailable:\n\n" + available.join("\n")
   .wait 10000, ->
     console.log "waited 10sec"
   .run()
