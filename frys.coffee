@@ -60,7 +60,7 @@ checkFrys = (product, zip, distance) ->
       for row in Array::slice.call(document.querySelectorAll("[name=storeSelect] tr"), 3)
         try
           store: row.querySelector("td:first-child b").innerText
-          availability: row.querySelector("td:last-child").innerText is "Items unavailable"
+          availability: row.querySelector("td:last-child").innerText isnt "Items unavailable"
     available = (store.store for store in stores when store.availability)
     console.log "available:", available
     if available.length > 0
